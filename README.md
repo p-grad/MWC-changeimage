@@ -1,7 +1,7 @@
 # **ChangeImage**
 Version 1.0  
 
-## Mutatuing Admission Controller for Kubernetes
+## Mutating Admission Controller for Kubernetes
 
 The ChangeImage [webhook](https://kubernetes.io/docs/reference/access-authn-authz/extensible-admission-controllers/#admission-webhooks) allows the kubernetes to automatiacaly change the image deffinition during Pod, Deployment, StatefullSet, DaemonSet creation or modification.  The change is based on a regularExpression [rulesets](doc/rulesets/README.md). 
 
