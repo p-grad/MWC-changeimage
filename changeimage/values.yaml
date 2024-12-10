@@ -1,0 +1,109 @@
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+# Number of pods running the webhook.
+# Keep it at 2 or increase the number for High Availability (HA).
+# Pods are created with an anti-affinity rule by default (see below) to ensure they are placed on different nodes.
+replicaCount: 2
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: true
+  # Annotations to add to the service account
+  annotations: {}
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: ""
+
+podAnnotations: {}
+
+podSecurityContext:
+  runAsUser: 1898
+  runAsGroup: 1898
+
+#  fsGroup: 2000
+
+securityContext: {}
+  # capabilities:
+  #   drop:
+  #   - ALL
+  # readOnlyRootFilesystem: true
+  # runAsNonRoot: true
+  # runAsUser: 1000
+
+# Service configuration used in the Service, MutatingWebhookConfiguration, 
+# and ValidatingWebhookConfiguration manifests.
+# Acts as the link between the API server and the webhooks.
+service:
+  type: ClusterIP
+  port: 443
+
+resources: {}
+  # We usually recommend not to specify default resources and to leave this as a conscious
+  # choice for the user. This also increases chances charts run on environments with little
+  # resources, such as Minikube. If you do want to specify resources, uncomment the following
+  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+  # limits:
+  #   cpu: 100m
+  #   memory: 128Mi
+  # requests:
+  #   cpu: 100m
+  #   memory: 128Mi
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 100
+  targetCPUUtilizationPercentage: 80
+  # targetMemoryUtilizationPercentage: 80
+
+nodeSelector: {}
+
+
+tolerations: []
+
+# webhook configuration
+webhook:
+
+  # enable pod affinity - make all webhook pods run on different nodes
+  affinityEnabled: true
+  affinity:
+    podAntiAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+      - labelSelector:
+          matchExpressions:
+          - key: app.kubernetes.io/name
+            operator: In
+            values:
+            - '{{ include "changeimage.name" . }}'
+          - key: app.kubernetes.io/instance
+            operator: In
+            values:
+            - '{{ .Release.Name }}'
+        topologyKey: "kubernetes.io/hostname"
+  # loglevel: 
+  loglevel: INFO
+  webhookName: "changeimage.webhook.k8s.pg.io"
+  webhookLabel: "k8s.pg.io/changeimage"
+  webhookAnnotation: "k8s.pg.io/changeimage"
+  webhookSecretFsPath: "/tls"
+  webhookWorkloadPath: "/workload" 
+  webhookCrdPath: "/crd" 
+  webhookServicePort: 8443
+  gunicornConfig: "/app/config.py"
+  initcontainer:
+    image:
+      repository: piotrgrad/changeimage-init
+      pullPolicy: Always
+      # Overrides the image tag whose default is the chart appVersion.
+      tag: "latest"
+  container:
+    image:
+      repository: piotrgrad/changeimage
+      pullPolicy: Always
+      # Overrides the image tag whose default is the chart appVersion.
+      tag: "latest"

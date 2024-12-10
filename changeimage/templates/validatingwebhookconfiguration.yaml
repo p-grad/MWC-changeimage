@@ -1,0 +1,34 @@
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingWebhookConfiguration
+metadata:
+  labels:
+    {{- include "changeimage.labels" . | nindent 4 }}
+    namespace: {{ .Release.Namespace }}
+  name: {{ include "changeimage.fullname" . }}-vwc
+webhooks:
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: {{ include "changeimage.fullname" . }}
+      namespace: {{ .Release.Namespace }}
+      path: {{ .Values.webhook.webhookCrdPath }}
+      port: {{ .Values.service.port }}
+  failurePolicy: Fail
+  matchPolicy: Equivalent
+  name: {{ .Values.webhook.webhookName }}
+  rules:
+  - apiGroups:
+    - '*'
+    apiVersions:
+    - '*'
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - imlicitimagerules
+    - defaultimagerules
+    - explicitimagerules
+    scope: '*'
+  sideEffects: None
+  timeoutSeconds: 20
