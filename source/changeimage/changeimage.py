@@ -1025,8 +1025,10 @@ def testFunction():
     log.info(f"testing namespace: {ns}, image: {image}")
     if (changeImage(requestInfo,ns,test=True)):
         log.info(f"test result, namespace: {ns}, orgimage: {image}, newimage {requestInfo['image']}")
-        answer = {'output': requestInfo["image"], 'reason': "changed " + image + " for namespace" + ns, 'controller': id}
+        message=f"changed {image} for namespace {ns}"
+        answer = f"{{'output': {requestInfo['image']}, 'reason': {message}, 'controller': {myID}}}"
     else:
         log.info(f"test result, namespace: {ns}, image {image} not changed")
-        answer = {'output': image, 'reason': "not changed " + image + " for namespace" + ns, 'controller': id}
+        message=f"not changed {image} for namespace {ns}"
+        answer = f"{{'output': {image}, 'reason': {message}, 'controller': {myID}}}"
     return(jsonify(answer))
