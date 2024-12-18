@@ -1,4 +1,4 @@
-FROM harbor.ez.local/docker.io/python:3.8.9-alpine
+FROM docker.io/python:3.8.9-alpine
 
 LABEL maintainer=piotr.grad.pg@gmail.com
 
