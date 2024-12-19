@@ -105,7 +105,7 @@ webhook:
   # webhookCrdPath - The path in the webhook API, where CRD validation is being performed
   # You do not need to change it
   webhookCrdPath: "/crd" 
-  # webhookServicePort - The webhook service port
+  # webhookServicePort - The webhook pod service port
   # You do not need to change it
   webhookServicePort: 8443
   # gunicornConfig - the path to the gunicorn config
