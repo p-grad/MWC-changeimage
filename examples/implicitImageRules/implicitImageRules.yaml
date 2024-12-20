@@ -1,0 +1,20 @@
+apiVersion: pg.io/v1
+kind: ImplicitImageRules
+metadata:
+  name: implicit-rule
+  annotations:
+    comment: |-
+      This is an example with a basic rule that performs no action.
+      Adjust according to your needs.
+      Rules are parsed in the order they appear in the rule set.
+      Each rule in the set follows the format pattern::replace::action.
+      If an image matches the pattern regular expression, it is modified according to replace.
+      Rules starting with # are ignored.
+      The action can be stop, an empty string, or any other value. stop means no further rules are applied if the image matches pattern.
+      The rule set is applied implicitly to all namespaces not listed in any ExplicitImageRules object and not listed in excludedNamespaces section.
+      There can be only one ImplicitImageRules object in the cluster
+spec:
+  rules:
+    - '^(.+)::\1::stop' # Do nothing
+  excludedNamespaces:
+    - kube-system

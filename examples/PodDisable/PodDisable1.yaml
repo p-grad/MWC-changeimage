@@ -1,0 +1,23 @@
+apiVersion: pg.io/v1
+kind: PodDisable
+metadata:
+  name: disble-production1
+  labels:
+    id: disable-prod1
+  annotations:
+    comment: |-
+     Disable image changes for all workloads with the labels
+     app=my-app, id=production in the namespace my-namespace
+     or
+     app=my-app1, id=production in the namespace another-namespace.
+spec:
+- andLabels:
+  - app: my-app
+  - id: production
+  namespaces:
+  - my-namespace
+- andLabels:
+  - app: my-app1
+  - id: production
+  namespaces:
+  - another-namespace

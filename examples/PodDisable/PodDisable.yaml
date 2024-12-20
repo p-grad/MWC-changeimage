@@ -1,0 +1,17 @@
+apiVersion: pg.io/v1
+kind: PodDisable
+metadata:
+  name: ml-specific
+  labels:
+    app: ml-specific
+  annotations:
+    comment: |-
+     Disable image changes for all workloads with the labels app=ml-pipeline-ui-artifact or app=ml-pipeline-visualizationserver
+     across all namespaces (with an empty namespaces section).
+     Deployments with these labels are controlled by the ML controller.
+     Therefore, changing images in these workloads leads to an infinite loop, so image changes must be disabled.
+spec:
+- andLabels:
+  - app: ml-pipeline-ui-artifact
+- andLabels:
+  - app: ml-pipeline-visualizationserver

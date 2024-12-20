@@ -1,0 +1,4 @@
+For configuration create custom resource definition (eir and/or iir and/or dir).
+Check examples directory and README.md
+
+

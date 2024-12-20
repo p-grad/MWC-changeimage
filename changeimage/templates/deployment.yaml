@@ -1,0 +1,130 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "changeimage.fullname" . }}
+  labels:
+    {{- include "changeimage.labels" . | nindent 4 }}
+  namespace: {{ .Release.Namespace }}
+spec:
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "changeimage.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "changeimage.selectorLabels" . | nindent 8 }}
+    spec:
+      priorityClassName: {{ include "changeimage.fullname" . }}
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "changeimage.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      initContainers:
+        - name: {{ .Chart.Name }}-init
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.webhook.initcontainer.image.repository }}:{{ .Values.webhook.initcontainer.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.webhook.initcontainer.image.pullPolicy }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          env:
+          - name: POD_NAME
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.name
+          - name: NAMESPACE
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.namespace
+          - name: WEBHOOK_SECRET_NAME
+            value: {{ include "changeimage.fullname" . }}-tls
+          - name: SECRET_PATH
+            value: {{ .Values.webhook.webhookSecretFsPath }}
+          - name: MWCNAME
+            value: {{ include "changeimage.fullname" . }}-mwc
+          - name: VWCNAME
+            value: {{ include "changeimage.fullname" . }}-vwc
+          - name: LOG_LEVEL
+            value: {{ .Values.webhook.loglevel }}
+          - name: WEBHOOK_SERVICE_NAME
+            value: {{ include "changeimage.fullname" . }}
+          - name: LABELS
+            value: '{{ include "common.labels" . }}'
+          volumeMounts:
+          - name: {{ include "changeimage.fullname" . }}-tls
+            mountPath: {{ .Values.webhook.webhookSecretFsPath }}
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.webhook.container.image.repository }}:{{ .Values.webhook.container.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.webhook.container.image.pullPolicy }}
+          command: ["gunicorn", "changeimage:app", "--config={{ .Values.webhook.gunicornConfig }}"]
+          env:
+          - name: POD_NAME
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.name
+          - name: WEBHOOK_NAMESPACE
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.namespace
+          - name: LOG_LEVEL
+            value: {{ .Values.webhook.loglevel }}
+          - name: DISABLE_LABEL
+            value: {{ .Values.webhook.webhookLabel }}
+          - name: WEBHOOK_ANNOTATION
+            value: {{ .Values.webhook.webhookAnnotation }}
+          - name: WEBHOOK_WORKLOAD_PATH
+            value: {{ .Values.webhook.webhookWorkloadPath }}
+          - name: WEBHOOK_CRD_PATH
+            value: {{ .Values.webhook.webhookCrdPath }}
+          ports:
+            - name: https
+              containerPort: {{ .Values.webhook.webhookServicePort }}
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: https
+              scheme: HTTPS
+          readinessProbe:
+            exec:
+              command: ["cat", "{{ .Values.webhook.webhookSecretFsPath }}/cert.pem"]
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          volumeMounts:
+          - name: {{ include "changeimage.fullname" . }}-tls
+            mountPath: {{ .Values.webhook.webhookSecretFsPath }}
+          - name: {{ include "changeimage.fullname" . }}
+            mountPath: {{ .Values.webhook.gunicornConfig }}
+            subPath: config.py
+      volumes:
+      - name: {{ include "changeimage.fullname" . }}
+        configMap:
+          name: {{ include "changeimage.fullname" . }}
+      - name: {{ include "changeimage.fullname" . }}-tls
+        emptyDir: {}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- if .Values.webhook.affinityEnabled }}
+      affinity: {{  tpl (toYaml .Values.webhook.affinity) . |  nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
