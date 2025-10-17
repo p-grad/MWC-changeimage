@@ -1,0 +1,30 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: {{ include "changeimage.fullname" . }}-write-crb
+  labels:
+    {{- include "changeimage.labels" . | nindent 4 }}
+roleRef:
+  kind: ClusterRole
+  name: {{ include "changeimage.fullname" . }}-write
+  apiGroup: rbac.authorization.k8s.io
+subjects:
+- kind: ServiceAccount
+  name: {{ include "changeimage.serviceAccountName" . }}
+  namespace: {{ .Release.Namespace }}
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: {{ include "changeimage.fullname" . }}-read-crb
+  labels:
+    {{- include "changeimage.labels" . | nindent 4 }}
+roleRef:
+  kind: ClusterRole
+  name: {{ include "changeimage.fullname" . }}-read
+  apiGroup: rbac.authorization.k8s.io
+subjects:
+- kind: ServiceAccount
+  name: {{ include "changeimage.serviceAccountName" . }}
+  namespace: {{ .Release.Namespace }}

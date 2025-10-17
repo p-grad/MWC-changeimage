@@ -1,0 +1,215 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  # name must match the spec fields below, and be in the form: <plural>.<group>
+  name: explicitimagerules.pg.io
+  labels:
+    {{- include "changeimage.labels" . | nindent 4 }}
+spec:
+  # group name to use for REST API: /apis/<group>/<version>
+  group: pg.io
+  # list of versions supported by this CustomResourceDefinition
+  versions:
+    - name: v1
+      # Each version can be enabled/disabled by Served flag.
+      served: true
+      # One and only one version must be marked as the storage version.
+      storage: true
+      schema:
+        openAPIV3Schema:
+          type: object
+          properties:
+            metadata:
+              properties:
+                name:
+                  maxLength: 63
+                  type: string
+              type: object
+            spec:
+              type: object
+              properties:
+                rules:
+                  items:
+                    type: string
+                  type: array
+                namespaces:
+                  items:
+                    pattern: ^(\*|\*-)?[a-z0-9]([-a-z0-9]*[a-z0-9])?(\*|-\*)?$
+                    type: string
+                  type: array
+              required:  
+                - rules
+                - namespaces
+  # either Namespaced or Cluster
+  scope: Cluster
+  names:
+    # plural name to be used in the URL: /apis/<group>/<version>/<plural>
+    plural: explicitimagerules
+    # singular name to be used as an alias on the CLI and for display
+    singular: explicitimagerules
+    # kind is normally the CamelCased singular type. Your resource manifests use this.
+    kind: ExplicitImageRules
+    # shortNames allow shorter string to match your resource on the CLI
+    shortNames:
+    - eir
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  # name must match the spec fields below, and be in the form: <plural>.<group>
+  name: implicitimagerules.pg.io
+  labels:
+    {{- include "changeimage.labels" . | nindent 4 }}
+spec:
+  # group name to use for REST API: /apis/<group>/<version>
+  group: pg.io
+  # list of versions supported by this CustomResourceDefinition
+  versions:
+    - name: v1
+      # Each version can be enabled/disabled by Served flag.
+      served: true
+      # One and only one version must be marked as the storage version.
+      storage: true
+      schema:
+        openAPIV3Schema:
+          type: object
+          properties:
+            metadata:
+              properties:
+                name:
+                  maxLength: 63
+                  type: string
+              type: object
+            spec:
+              type: object
+              properties:
+                rules:
+                  items:
+                    type: string
+                  type: array
+                excludedNamespaces:
+                  items:
+                    pattern: ^(\*|\*-)?[a-z0-9]([-a-z0-9]*[a-z0-9])?(\*|-\*)?$
+                    type: string
+                  type: array
+              required:  
+                - rules
+                - excludedNamespaces
+  # either Namespaced or Cluster
+  scope: Cluster
+  names:
+    # plural name to be used in the URL: /apis/<group>/<version>/<plural>
+    plural: implicitimagerules
+    # singular name to be used as an alias on the CLI and for display
+    singular: implicitimagerules
+    # kind is normally the CamelCased singular type. Your resource manifests use this.
+    kind: ImplicitImageRules
+    # shortNames allow shorter string to match your resource on the CLI
+    shortNames:
+    - iir
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  # name must match the spec fields below, and be in the form: <plural>.<group>
+  name: defaultimagerules.pg.io
+  labels:
+    {{- include "changeimage.labels" . | nindent 4 }}
+spec:
+  # group name to use for REST API: /apis/<group>/<version>
+  group: pg.io
+  # list of versions supported by this CustomResourceDefinition
+  versions:
+    - name: v1
+      # Each version can be enabled/disabled by Served flag.
+      served: true
+      # One and only one version must be marked as the storage version.
+      storage: true
+      schema:
+        openAPIV3Schema:
+          type: object
+          properties:
+            metadata:
+              properties:
+                name:
+                  maxLength: 63
+                  type: string
+              type: object
+            spec:
+              type: object
+              properties:
+                rules:
+                  items:
+                    type: string
+                  type: array
+              required:  
+                - rules
+  # either Namespaced or Cluster
+  scope: Cluster
+  names:
+    # plural name to be used in the URL: /apis/<group>/<version>/<plural>
+    plural: defaultimagerules
+    # singular name to be used as an alias on the CLI and for display
+    singular: defaultimagerules
+    # kind is normally the CamelCased singular type. Your resource manifests use this.
+    kind: DefaultImageRules
+    # shortNames allow shorter string to match your resource on the CLI
+    shortNames:
+    - dir
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  # name must match the spec fields below, and be in the form: <plural>.<group>
+  name: poddisable.pg.io
+  labels:
+    {{- include "changeimage.labels" . | nindent 4 }}
+spec:
+  # group name to use for REST API: /apis/<group>/<version>
+  group: pg.io
+  # list of versions supported by this CustomResourceDefinition
+  versions:
+    - name: v1
+      # Each version can be enabled/disabled by Served flag.
+      served: true
+      # One and only one version must be marked as the storage version.
+      storage: true
+      schema:
+        openAPIV3Schema:
+          type: object
+          properties:
+            metadata:
+              properties:
+                name:
+                  maxLength: 63
+                  type: string
+              type: object
+            spec:
+              type: array
+              items:
+                type: object
+                properties:
+                  namespaces:
+                    type: array
+                    items:
+                      type: string
+                  andLabels:
+                    type: array
+                    items:
+                      type: object
+                      additionalProperties:
+                        type: string
+                required:
+                - andLabels
+  # either Namespaced or Cluster
+  scope: Cluster
+  names:
+    # plural name to be used in the URL: /apis/<group>/<version>/<plural>
+    plural: poddisable
+    # singular name to be used as an alias on the CLI and for display
+    singular: poddisable
+    # kind is normally the CamelCased singular type. Your resource manifests use this.
+    kind: PodDisable
+    # shortNames allow shorter string to match your resource on the CLI
+    shortNames:
+    - pd

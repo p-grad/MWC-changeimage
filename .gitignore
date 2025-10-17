@@ -1,0 +1,4 @@
+source/changeimage/copy-file.sh
+source/changeimage/local-bin
+source/changeimage-init/copy-file.sh
+source/changeimage-init/local-bin
