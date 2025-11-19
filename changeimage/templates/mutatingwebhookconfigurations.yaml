@@ -32,9 +32,6 @@ webhooks:
     - UPDATE
     resources:
     - pods
-    - deployments
-    - daemonsets
-    - statefulsets
     scope: '*'
   sideEffects: None
   timeoutSeconds: 20

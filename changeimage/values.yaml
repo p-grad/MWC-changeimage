@@ -116,10 +116,10 @@ webhook:
     image:
       repository: piotrgrad/changeimage-init
       pullPolicy: Always
-      tag: "latest"
+      tag: "1.1"
   # container image definition - replace with your own image location or leave as is - pull from docker.io
   container:
     image:
       repository: piotrgrad/changeimage
       pullPolicy: Always
-      tag: "latest"
+      tag: "1.1"

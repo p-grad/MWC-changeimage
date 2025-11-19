@@ -14,7 +14,7 @@ metadata:
       Rule set is applied explicitly to all namespaces listed in the 'namepsaces' section
 spec:
   rules:
-    - '^(my.harbor.local/.+)::\1::stop' # step1
+    - '^(my\.harbor\.local/.+)::\1::stop' # step1
     - '^([^/]+)$::my.harbor.local/docker.io/\1::stop' # step 2
     - '^([^\./]+/.+)$::my.harbor.local/docker.io/\1::stop' # step 3
     - '^(.+)$::my.harbor.local/\1::cont' # step 4

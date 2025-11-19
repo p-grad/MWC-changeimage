@@ -13,7 +13,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-# Last modified: 2024.11.21 17:46:08
+# Last modified: 2025.11.19 04:59:53
 
 """
 Program acts as mutating webhook.
@@ -46,7 +46,7 @@ semimageRules = threading.Semaphore(1) # semaphore for *ImageRules dictionary
 app = Flask(__name__)
 
 # Set Global variablesa
-webhookVersion = "2.4, Last modified: 2024.11.21 17:46:08"
+webhookVersion = "2.4, Last modified: 2025.11.19 04:59:53"
 podName = os.getenv("POD_NAME")
 webhookNamespace = os.getenv("WEBHOOK_NAMESPACE", "default")
 logLevel = os.getenv("LOG_LEVEL", "INFO")
@@ -270,7 +270,7 @@ def getCRD(plural,d):
         sys.exit(1)
 
 ################################################################################
-def addRuleToNamespaces(nss,rules,name):
+def addRuleToNamespaces(nss,rules,name,type):
     """
     Function converts rules from imagerules crd to namespaces dictionary
     """
@@ -279,7 +279,7 @@ def addRuleToNamespaces(nss,rules,name):
         # the namespace can exist if it was added by explicitImageRules
         # and now the function was called to add implicit or default..ImageRules
         if ns in namespaces:
-            log.info(f"namespace {ns} already in namespaces list")
+            log.info(f"namespace {ns}, rule type {namespaces[ns]['type']}, rule name {namespaces[ns]['name']} already in namespaces list")
             return(None)
         # We need to ommit own namespace from labaling, it is because:
         # setting own namespace to label (i.e. by DefaultImageRules)
@@ -295,10 +295,11 @@ def addRuleToNamespaces(nss,rules,name):
             log.warning(f"Namespace {webhookNamespace} can not be labaled - omitting")
             continue
 
-        log.debug(f"adding {ns} {rules} to namespaces")
+        log.debug(f"adding {ns} {type} {name} to namespaces")
         namespaces[ns] = {}
         namespaces[ns]["rules"] = []
         namespaces[ns]["name"] = name
+        namespaces[ns]["type"] = type
         for line in rules:
         # Skip commented lines
             if line[0] == "#":
@@ -345,7 +346,7 @@ def prepareNamespaces():
     # expicitImageRules
     namespaces.clear()
     for item in explicitImageRules:
-        addRuleToNamespaces(item["spec"]["namespaces"],item["spec"]["rules"],item["metadata"]["name"])
+        addRuleToNamespaces(item["spec"]["namespaces"],item["spec"]["rules"],item["metadata"]["name"],"explicit")
 
     allNS = v1.list_namespace()
     # implicitImageRules
@@ -353,13 +354,13 @@ def prepareNamespaces():
         for ns in allNS.items:
             if ns.metadata.name not in item["spec"]["excludedNamespaces"]:
                 log.debug(f"implicit adding ns: {ns.metadata.name} to namespaces, rules: {item['spec']['rules']} ")
-                addRuleToNamespaces([ns.metadata.name] ,item["spec"]["rules"],item["metadata"]["name"])
+                addRuleToNamespaces([ns.metadata.name] ,item["spec"]["rules"],item["metadata"]["name"],"implicit")
 
     # defaulImageRule
     for item in defaultImageRules:
         for ns in allNS.items:
             log.debug(f"default adding ns: {ns.metadata.name} to namespaces, rules: {item['spec']['rules']} ")
-            addRuleToNamespaces([ns.metadata.name] ,item["spec"]["rules"],item["metadata"]["name"])
+            addRuleToNamespaces([ns.metadata.name] ,item["spec"]["rules"],item["metadata"]["name"],"default")
 
     return(None)
 
@@ -383,7 +384,7 @@ def checkUnsetLabel(ns):
     Function checks and eventually unset (if set) label to unmark namespace for webhook
     """
     labels = ns.metadata.labels or {}
-    if disableLabel not in labels or labels[disableLabel] == "disabled":
+    if disableLabel not in labels:
         log.debug(f"Checked namespace {ns.metadata.name} - {disableLabel} already unset - OK")
         return(False)
     body = {
@@ -402,6 +403,7 @@ def checkSetLabel(ns):
     Function checks and eventually set (if not set) label to mark namespace for webhook
     """
     labels = ns.metadata.labels or {}
+    label_value = f"{namespaces[ns.metadata.name]['type']}-{namespaces[ns.metadata.name]['name']}"
     if disableLabel in labels and labels[disableLabel] == "enabled":
         log.debug(f"Checked namespace {ns.metadata.name} - {disableLabel} already set - OK")
         return(False)
@@ -409,7 +411,7 @@ def checkSetLabel(ns):
     body = {
         "metadata": {
             "labels": {
-                disableLabel: "enabled"
+                disableLabel: label_value
             }
         }
     }
@@ -598,7 +600,7 @@ def setup_function():
 ################################################################################
 def allowDoNotModify(requestInfo):
     """
-    Function returns admissionReview response - "allowd, nothing modified"
+    Function returns admissionReview response - "allowed, nothing modified"
     """
     admissionResponse = {
         "allowed": True,
