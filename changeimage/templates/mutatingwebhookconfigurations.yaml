@@ -18,8 +18,9 @@ webhooks:
   matchPolicy: Equivalent
   name: {{ .Values.webhook.webhookName }}
   namespaceSelector:
-    matchLabels:
-      {{ .Values.webhook.webhookLabel }}: enabled
+    matchExpressions:
+      - key: {{ .Values.webhook.webhookLabel }}
+        operator: Exists
   objectSelector: {}
   reinvocationPolicy: IfNeeded
   rules:
